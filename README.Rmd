@@ -1,0 +1,55 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# noisecanceling
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of `noisecanceling` is to run basic psychometric analysis of scales composed of likert scaled items implementing acquiescence correction. It assumes a test composed of likert item types with some semantic pairs. This package have also some functions that facilitates runing psychometric analysis of tests composed of multiple scales.
+
+
+## Installation
+
+You can install the development version of noisecanceling from [GitHub](https://github.com/) with:
+
+```{r}
+# install.packages("devtools")
+devtools::install_github("rprimi/noisecanceling")
+```
+
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+```{r example}
+
+ library(noisecanceling)
+ library(magrittr)
+
+ senna_recoded <-data %>% 
+    select(unique(item_dic$coditem)) %>% 
+    recode_for_acq( 
+    item_dic = item_dic
+  )
+
+ senna_psicom <- find_psychometrics(senna_recoded, likert = 5, center = 3)
+  
+ save_item_psicom( senna_psicom , filename = "senna_psicom.xlsx") 
+  
+
+```
+
+

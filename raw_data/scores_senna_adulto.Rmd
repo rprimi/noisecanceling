@@ -1,0 +1,271 @@
+---
+title: "Senna adulto Personal Repport"
+author: "Ricardo Primi"
+date: "18/08/2021"
+output: html_document
+---
+
+#### Normas Senna Adulto
+* Biblioteca
+```{r}
+
+ library(tidyverse)
+ library(readxl)
+ library(sjmisc )
+
+v <- names(base)[c(1, 16, 824, 825, 30, 32:226)]
+
+df <- base %>% select(v)
+
+names(df) <- str_replace_all(string = names(df) , pattern = "Value_", replacement = "")
+
+saveRDS(df, file ="demo_data.RDS")
+  
+```
+
+## Data
+```{r}
+ load("~/Dropbox (Personal)/IAS/SENNAv2.0/senna_adulto_db.RData")
+ save(base, file = "senna_adl.RData")
+ 
+ dic_senna_adl <- read_excel(
+    "../../B5 BFI-2/b5_feedback_app/tabelas.xlsx",
+    sheet = "bfi2_senna_dic"
+  ) %>% 
+  filter(teste == "senna")
+ save(dic_senna_adl, file = "dic_senna_adl.RData")
+ 
+ 
+ 
+v  <- names(base)[32:427] %>% str_remove("Value_")
+names(base)[32:427] <- v
+
+
+base[ , item_dic$coditem]
+
+ base <- base %>% 
+  dplyr::mutate(across(all_of(item_dic$coditem), ~as.integer(.x))) %>%
+  rowwise() %>%
+  dplyr::mutate(
+   n_miss_senna = sum(is.na(c_across(all_of(dic_senna_adl$CodItem)))),
+   n_itens_senna = sum(!is.na(c_across(all_of(dic_senna_adl$CodItem)))),
+   n_itens_f1 = sum(!is.na(c_across(all_of(dic_senna_adl$CodItem[dic_senna_adl$`forma final` == 1])))),
+   n_itens_f2 = sum(!is.na(c_across(all_of(dic_senna_adl$CodItem[dic_senna_adl$`forma final` == 2])))),
+   n_itens_f3 = sum(!is.na(c_across(all_of(dic_senna_adl$CodItem[dic_senna_adl$`forma final` == 3]))))
+   ) %>%
+  ungroup() 
+ 
+ base <- base  %>% filter(n_itens_senna > 42 )
+ 
+ save(base, dic_senna_adl,  file = "bd_senna_adl.RData")
+ 
+ frq(base$n_miss_senna)
+ frq(base$n_itens_senna)
+ 
+ frq(base$n_itens_f1)
+ frq(base$n_itens_f2)
+ frq(base$n_itens_f3)
+ 
+ flat_table(base, n_itens_f1, n_itens_f2)
+ 
+names (base)
+
+```
+
+```{r}
+ load("bd_senna_adl.RData")
+
+ source("recoding_functions.R")
+
+```
+
+  
+
+* Calcula scores com os itens finais.
+```{r eval = FALSE}
+
+  
+  item_dic1 <-
+   tibble(
+     coditem =dic_senna_adl$CodItem[dic_senna_adl$`forma final` == 1],
+     scale = paste(dic_senna_adl$domain[dic_senna_adl$`forma final` == 1], sep = ""),
+     pole = dic_senna_adl$pole[dic_senna_adl$`forma final` == 1],
+     seman_pairs = dic_senna_adl$seman_pairs1[dic_senna_adl$`forma final` == 1],
+     item_text = dic_senna_adl$item_text[dic_senna_adl$`forma final` == 1],
+     en_text = dic_senna_adl$en_text[dic_senna_adl$`forma final` == 1]
+   ) %>%
+   bind_rows(
+     tibble(
+       coditem = dic_senna_adl$CodItem[dic_senna_adl$`forma final` == 1],
+       scale = paste(dic_senna_adl$domain[dic_senna_adl$`forma final` == 1],
+         "_", dic_senna_adl$facet[dic_senna_adl$`forma final` == 1],
+         sep = ""
+       ),
+       pole =  dic_senna_adl$pole[dic_senna_adl$`forma final` == 1],
+       seman_pairs =  dic_senna_adl$seman_pairs1[dic_senna_adl$`forma final` == 1],
+       item_text =  dic_senna_adl$item_text[dic_senna_adl$`forma final` == 1],
+       en_text =  dic_senna_adl$en_text[dic_senna_adl$`forma final` == 1]
+     )
+   )
+ 
+ 
+  
+```
+
+
+
+```{r}
+  
+  senna_recoded <-base %>% 
+   filter(n_itens_f1 >40 ) %>%
+    select(unique(item_dic1$coditem)) %>% 
+    recode_for_acq( 
+    item_dic = item_dic1
+  )
+
+
+  senna_psicom <- find_psychometrics(senna_recoded, likert = 5, center = 3)
+  
+  senna_psicom$alpha_orig_scale_stat %>% view
+  
+  senna_psicom$alpha_orig_item_stat %>% view
+  
+ save_item_psicom( senna_psicom , filename = "senna_psicom.xlsx") 
+  
+  
+  
+   multi.hist(senna_psicom$scores[ , c(1:5, 47)])
+   
+  
+```
+
+```{r}
+library(skimr)
+
+senna_recoded$data_acq_recoded %>% 
+ dplyr::mutate(across(everything(), ~ .x + 3 ) ) %>% skim
+
+senna_recoded$data_acq_recoded %>% 
+ dplyr::mutate(across(everything(), ~ .x + 3 ) ) %>% describe
+
+```
+
+### Running alpha
+```{r}
+
+v <- dic_senna_adl %>% filter(domain == "C", `forma final` == 1) %>% pull(CodItem)
+v0 <- dic_senna_adl %>% filter(domain == "C", `forma final` == 1, pole == 0) %>% pull(CodItem)
+
+tmp <- alpha(x = senna_recoded$data_acq_recoded[ , v], keys = v0)
+
+glimpse(tmp)
+
+
+dic_nested <- item_dic1 %>% 
+ dplyr::mutate(pole2 = ifelse(pole==0, -1, 1)) %>%
+ dplyr::select(coditem, scale, pole2) %>% 
+ group_by(scale) %>% 
+ tidyr::nest() %>%
+ dplyr::mutate(
+  vars = purrr::map(data, "coditem"),
+  keys = purrr::map(data, "pole2")
+ ) %>%
+ dplyr::mutate(
+  alfa = purrr::map2(vars, keys, ~psych::alpha(x = base[ , .x], keys = .y))
+ ) %>% 
+ dplyr::mutate( 
+  scale_stat = map(alfa, "total"),
+  item_stats = map(alfa, "item.stats")
+ )
+
+dic_nested %>% 
+ dplyr::select(scale, scale_stat) %>%
+ tidyr::unnest_wider(scale_stat)
+
+
+dic_nested %>% 
+ dplyr::select(scale, vars, item_stats) %>%
+ tidyr::unnest()
+
+glimpse(dic_nested$alfa[[3]])
+ dic_nested$scale_stat
+ 
+ 
+ 
+ map(dic_nested$data, "coditem")
+
+
+usethis::edit_r_buildignore()
+
+```
+### Data for the package
+
+```{r}
+
+
+
+ library(tidyverse)
+ library(readxl)
+ library(sjmisc )
+
+v <- names(base)[c(1, 16, 824, 825, 30, 32:226, 406)]
+
+df <- base %>% select(v)
+
+names(df) <- str_replace_all(string = names(df) , pattern = "Value_", replacement = "")
+
+saveRDS(df, file ="demo_data.RDS")
+```
+
+```{r}
+
+ item_dic <-
+     tibble(
+       coditem = dic_senna_adl$CodItem,
+       scale = paste(dic_senna_adl$domain,
+         "_", dic_senna_adl$facet,
+         sep = ""
+       ),
+       pole =  dic_senna_adl$pole,
+       seman_pairs =  dic_senna_adl$seman_pairs1,
+       item_text =  dic_senna_adl$item_text,
+       en_text =  dic_senna_adl$en_text
+     )
+  
+
+
+sjmisc::frq(df$CodAssessment)
+
+names(base)
+
+
+ df <- df %>% 
+  dplyr::mutate(across(all_of(item_dic$coditem), ~as.integer(.x))) %>%
+  rowwise() %>%
+  dplyr::mutate(
+   n_miss_senna = sum(is.na(c_across(all_of(dic_senna_adl$CodItem)))),
+   n_itens_senna = sum(!is.na(c_across(all_of(dic_senna_adl$CodItem)))),
+   n_itens_f1 = sum(!is.na(c_across(all_of(dic_senna_adl$CodItem[dic_senna_adl$`forma final` == 1])))),
+   n_itens_f2 = sum(!is.na(c_across(all_of(dic_senna_adl$CodItem[dic_senna_adl$`forma final` == 2])))),
+   n_itens_f3 = sum(!is.na(c_across(all_of(dic_senna_adl$CodItem[dic_senna_adl$`forma final` == 3]))))
+   ) %>%
+  ungroup() 
+  sjmisc::flat_table(df,  n_itens_senna, CodAssessment)
+ 
+  sjmisc::frq(df$n_itens_senna)
+  sjmisc::frq(df$n_itens_f1)
+  sjmisc::frq(df$n_itens_f2)
+  sjmisc::frq(df$n_itens_f3) 
+ 
+ 
+ base <- base  %>% filter(n_itens_senna > 42 )
+ 
+ data <- df %>% filter(n_itens_senna > 80)
+ 
+saveRDS(data, file ="data.RDS")
+saveRDS(item_dic, file = "item_dic")
+
+usethis::use_data(data, item_dic)
+
+```
+
