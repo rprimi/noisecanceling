@@ -25,7 +25,7 @@ acquiescence noise ends up split into equal positive and negative
 amounts that **cancel out**. If a scale is carefully built with PK/NK
 items, what remains after centering is a purified measure of the trait.
 
-![](figures/what_is_acq.jpg)![](figures/f2.jpg)
+![](reference/figures/what_is_acq.jpg)![](reference/figures/f2.jpg)
 
 ## Installation
 
