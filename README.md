@@ -34,9 +34,10 @@ Balanced personality scales do something similar:
 When NK items are reverse-scored and items are summed into a scale
 score, the trait signal is realigned to a common pole while the
 acquiescence noise ends up split into equal positive and negative
-amounts that **cancel out**. If a scale is carefully built with balanced
-PK/NK items, what remains after centering (ipsatizing) is a purified
-measure of the trait.
+amounts that **cancel out**. If a scale is carefully built with PK/NK
+items, what remains after centering is a purified measure of the trait.
+
+![](figures/what_is_acq.jpg) ![](figures/f2.jpg)
 
 ## Installation
 

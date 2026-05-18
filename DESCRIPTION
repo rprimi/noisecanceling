@@ -9,8 +9,8 @@ Authors@R:
            email = "rprimi@mac.com")
 Description: Tools for measuring and correcting acquiescence response bias
     (the tendency to agree with items regardless of their content) in
-    psychological questionnaires built with balanced scales. Balanced scales
-    pair positively keyed (PK) and negatively keyed (NK) items so that a
+    psychological questionnaires. When scales contains
+    pair of positively keyed (PK) and negatively keyed (NK) items a
     per-person acquiescence index can be estimated and removed by centering
     item responses. The approach works like noise-cancelling headphones: the
     trait is the signal, acquiescence is the noise, and inverting the negatively

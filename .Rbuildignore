@@ -16,3 +16,4 @@
 ^\.git$
 ^Rplots\.pdf$
 ^CRAN-SUBMISSION$
+^\.positai$
