@@ -46,8 +46,8 @@ split into equal positive and negative amounts that **cancel out**. If a scale
 is carefully built with PK/NK items, what remains after centering
 is a purified measure of the trait.
 
-![](figures/what_is_acq.jpg) 
-![](figures/f2.jpg) 
+![](man/figures/what_is_acq.jpg) 
+![](man/figures/f2.jpg) 
 
 
 ## Installation
