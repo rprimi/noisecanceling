@@ -1,0 +1,58 @@
+url: https://rprimi.github.io/noisecanceling/
+
+template:
+  bootstrap: 5
+  bslib:
+    bg: "#0A1E38"
+    fg: "#EAF7F5"
+    primary: "#27E0C8"
+    base_font: {google: "Quicksand"}
+    heading_font: {google: "Quicksand"}
+    code_font: {google: "JetBrains Mono"}
+
+home:
+  title: noisecanceling
+  description: >
+    Measure and correct acquiescence response bias in balanced psychological
+    scales.
+
+navbar:
+  structure:
+    left: [intro, reference, articles]
+    right: [search, github]
+
+reference:
+- title: Acquiescence correction
+  desc: Estimate the acquiescence index and analyse corrected scores.
+  contents:
+  - recode_for_acq
+  - find_psychometrics
+- title: Scoring
+  desc: Score scales from an item dictionary.
+  contents:
+  - score_tests
+  - dic2keys
+- title: Visualising items
+  desc: Inspect item response distributions.
+  contents:
+  - item_histograms
+  - describe_likert
+  - boxplot_descritivo
+- title: Exporting results
+  desc: Write psychometric results and loadings to Excel.
+  contents:
+  - save_item_psicom
+  - save_item_psicom_si
+  - save_loadings
+  - write_sheet_in_excelfile
+- title: Utilities
+  contents:
+  - cria_quartis
+  - map_factor_levels
+  - sharedcount
+  - "%>%"
+- title: Data
+  desc: Example data set and item dictionary.
+  contents:
+  - data_senna
+  - senna_dic

@@ -1,0 +1,141 @@
+---
+title: "Correcting questionnaires for acquiescence bias"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Correcting questionnaires for acquiescence bias}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+```{r setup}
+library(noisecanceling)
+```
+
+## Acquiescence as noise
+
+**Acquiescence** is the tendency to agree with questionnaire items regardless
+of their content. It adds a person-specific offset to every response and
+distorts scale scores, reliabilities and correlations.
+
+`noisecanceling` treats acquiescence the way noise-cancelling headphones treat
+ambient sound. The headphones record the noise and play back an inverted copy
+(180° out of phase); the noise and its inverted copy cancel, leaving the
+signal. In a **balanced scale**:
+
+- the **trait** is the signal;
+- **acquiescence** is the noise, and it pushes responses *upward* on both
+  positively keyed (PK) and negatively keyed (NK) items;
+- reverse-scoring the NK items realigns the trait signal while leaving
+  acquiescence split into equal positive and negative parts that cancel.
+
+The package estimates a per-person acquiescence index from the balanced items
+and centers responses on it, so the remaining variance is a purified measure
+of the trait.
+
+## The item dictionary
+
+Every function is driven by an **item dictionary**: a data frame with one row
+per item describing how it should be scored. The bundled `senna_dic` is an
+example.
+
+```{r}
+data(senna_dic)
+head(senna_dic[, c("coditem", "scale", "pole", "seman_pairs", "item_text")])
+```
+
+The required columns are:
+
+| Column        | Meaning                                                        |
+|---------------|----------------------------------------------------------------|
+| `coditem`     | Item code; matches a column name in the response data.         |
+| `scale`       | Scale the item is scored on.                                   |
+| `pole`        | `1` = positively keyed, `0` = negatively keyed.                |
+| `seman_pairs` | Identifier of the PK/NK semantic pair; `NA` if the item is not paired. |
+| `item_text`   | Item text (optional, carried through for reporting).           |
+
+Items with a non-missing `seman_pairs` value are the **balanced items** used to
+estimate acquiescence.
+
+## Step 1 — Recode for acquiescence
+
+`recode_for_acq()` computes the acquiescence index (the within-person mean of
+all paired items) and centers every response on it.
+
+```{r}
+data(data_senna)
+
+recoded <- recode_for_acq(data_senna, senna_dic)
+str(recoded, max.level = 1)
+```
+
+`acq_index` holds the per-person index and within-subject standard deviation:
+
+```{r}
+head(recoded$acq_index)
+```
+
+`data_acq_recoded` holds the centered responses — each value is the original
+response minus that person's acquiescence index.
+
+## Step 2 — Classical psychometrics
+
+`find_psychometrics()` reverse-scores the NK items and runs a classical
+psychometric analysis (scale scores, Cronbach's alpha, item-total
+correlations) on **both** the original and the acquiescence-corrected data.
+
+```{r}
+psicom <- find_psychometrics(recoded, likert = 5, center = 3)
+```
+
+Compare the reliabilities side by side:
+
+```{r}
+orig <- psicom$alpha_orig_scale_stat[, c("scale", "raw_alpha")]
+rec  <- psicom$alpha_rec_scale_stat[, c("scale", "raw_alpha")]
+merge(orig, rec, by = "scale", suffixes = c("_original", "_recoded"))
+```
+
+The `scores` element contains the scale scores (`_ori` and `_rec`) together
+with the acquiescence indices, ready for further analysis.
+
+```{r}
+head(psicom$scores)
+```
+
+## Scoring without an acquiescence object
+
+`score_tests()` scores scales directly from a data frame and an item
+dictionary, which is handy for scoring either raw or already-recoded data.
+
+```{r}
+scored <- score_tests(data_senna, senna_dic)
+scored$alpha_scale_stat[, c("scale", "raw_alpha", "std.alpha")]
+```
+
+## Exporting results
+
+`save_item_psicom()` writes the full `find_psychometrics()` output to a
+multi-sheet Excel workbook, and `save_item_psicom_si()` does the same for
+`score_tests()` output:
+
+```{r, eval = FALSE}
+save_item_psicom(psicom, filename = "senna_psychometrics.xlsx")
+```
+
+## Summary
+
+1. Build an **item dictionary** describing scales, poles and semantic pairs.
+2. `recode_for_acq()` — estimate acquiescence and center the responses.
+3. `find_psychometrics()` or `score_tests()` — analyse the corrected scores.
+4. `save_item_psicom()` — export the results.
+
+See the [function reference](../reference/index.html) for the full API.

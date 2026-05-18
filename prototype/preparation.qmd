@@ -1,0 +1,60 @@
+---
+title: "Preparation"
+format: html
+editor: visual
+---
+
+### Data for the package
+
+```{r}
+
+load("~/Dropbox (Personal)/Artigos/2019 IJT/artigo_ijt.RData")
+
+vars <- names(bd_artigo_itc)[c(1:197, 253, 257, 260,  293:295, 930, 931)]
+
+sjmisc::frq(bd_artigo_itc$age1)
+sjmisc::frq(bd_artigo_itc$Education)
+sjmisc::frq(bd_artigo_itc$SEXO)
+
+sjmisc::frq(bd_artigo_itc$Education)
+
+library(dplyr)
+
+set.seed(23)
+data_senna <- bd_artigo_itc %>% select(vars) %>% sample_n(size = 2300) 
+
+sjmisc::frq(data_senna$age1)
+sjmisc::frq(data_senna$Education)
+sjmisc::frq(bd_artigo_itc$SEXO)
+
+saveRDS(data_senna, file="data_senna.RData")
+
+names(item_diction_new2)
+
+senna_dic <- tibble(
+ coditem = item_diction_new2$codItem,
+ scale = item_diction_new2$domain_final,
+ pole = item_diction_new2$pole, 
+ seman_pairs = item_diction_new2$pairs_final, 
+ item_text = item_diction_new2$item_text,
+ item_text_pt  = item_diction_new2$port_text,
+ domain = item_diction_new2$domain_final,
+ facet = item_diction_new2$facet_final,
+ pers_selfeff = item_diction_new2$P_S
+)
+
+senna_dic %>% arrange(domain, facet, pers_selfeff, seman_pairs ) %>% View()
+
+senna_dic %>% 
+ mutate(domain = factor(domain, levels = c("O", "C", "E","A", "N"))) %>%
+ arrange(domain, facet, pers_selfeff, seman_pairs ) %>%
+ writexl::write_xlsx(path = "senna_dic.xlsx")
+
+library(readxl)
+senna_dic <- read_excel("senna_dic.xlsx")
+saveRDS(senna_dic, "senna.dic.RDS")
+
+View(senna_dic)
+
+
+```
