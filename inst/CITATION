@@ -1,0 +1,22 @@
+citHeader("To cite the noisecanceling package in publications, please cite the methods paper:")
+
+bibentry(
+  bibtype  = "Article",
+  title    = "Comparison of classical and modern methods for measuring and correcting for acquiescence",
+  author   = c(
+    person("Ricardo", "Primi"),
+    person("Daniel", "Santos"),
+    person("Filip", "De Fruyt"),
+    person("Oliver P.", "John")
+  ),
+  journal  = "British Journal of Mathematical and Statistical Psychology",
+  year     = "2019",
+  doi      = "10.1111/bmsp.12168",
+  textVersion = paste(
+    "Primi, R., Santos, D., De Fruyt, F., & John, O. P. (2019).",
+    "Comparison of classical and modern methods for measuring and",
+    "correcting for acquiescence.",
+    "British Journal of Mathematical and Statistical Psychology.",
+    "https://doi.org/10.1111/bmsp.12168"
+  )
+)

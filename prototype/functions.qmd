@@ -1,0 +1,87 @@
+---
+title: "Functions"
+format: html
+editor: visual
+---
+## Recode for acq
+
+
+
+1. Create a dictionary with semantic pairs,  unbalanced positive and negative items per scale 
+2. Calculate acq indexes general and specific 
+3. Calculate within pole inconsistencies 
+4. Correct item responses for acq
+
+```{r}
+# arguments
+
+item_dic <- senna_dic
+df <- data_senna
+
+# acq_index general
+
+coditem_acq <- senna_dic %>% 
+ dplyr::mutate(item_pair = as.integer(!is.na(seman_pairs))) %>%
+ dplyr::filter(item_pair ==1) %>%
+ dplyr::pull(coditem) %>%
+ unique
+
+
+ # Acquiescence index and sds global
+ acq_index<- apply(df[, coditem_acq], MARGIN = 1, mean, na.rm = TRUE)
+ acq_sd <-  apply(df[, coditem_acq], MARGIN = 1, sd, na.rm = TRUE) 
+ acq_sd <- ifelse(acq_sd == 0, NA, acq_sd)
+ 
+ acq_index_global <- tibble(
+  acq_index  = index_acq,
+  acq_sd = acq_sd
+ )
+ 
+# Acquiescence index per scale
+acq_dic <- senna_dic %>% 
+ dplyr::mutate(item_pair = as.integer(!is.na(seman_pairs))) %>%
+ dplyr::filter(item_pair ==1) %>%
+ dplyr::group_by(scale) %>%
+ dplyr::summarise(items =  list(coditem)) %>%
+ dplyr::ungroup()
+
+
+scales <- acq_dic$scale
+items <- acq_dic$items
+
+# Initialize the list
+acq_index_by_scale <- vector("list", length(scales))
+
+for (i in seq_along(scales)) {
+  acq_index_by_scale[[i]] <- apply(df[, items[[i]] ], MARGIN = 1, mean, na.rm = TRUE)
+  names(acq_index_by_scale)[i] <- paste0("acq_index_", scales[[i]])
+}
+
+# Convert to a data frame if needed
+acq_index_by_scale_df <- as.data.frame(acq_index_by_scale)
+
+
+# inconsistency unbalanced scales
+
+
+unbalance_dic <- item_dic %>% 
+ dplyr::mutate(item_pair = as.integer(!is.na(seman_pairs))) %>%
+ dplyr::group_by(scale, item_pair, pole) %>%
+ dplyr::summarise(items =  list(coditem)) %>%
+ dplyr::ungroup() %>%
+ tidyr::pivot_wider(
+  names_from = c(item_pair, pole), 
+  values_from = items) %>%
+ purrr::set_names("scale", "unbl_neg", "unbl_pos", "bal_neg", "bal_pos") %>%
+ dplyr::mutate(
+  pos = !purrr::map_lgl(unbl_pos, is.null) & !purrr::map_lgl(bal_pos, is.null), 
+  neg = !purrr::map_lgl(unbl_neg, is.null) & !purrr::map_lgl(bal_neg, is.null)
+  ) %>%
+ dplyr::filter((pos | neg))
+
+
+
+
+is.null(unbalance_dic[["0_0"]])
+```
+
